@@ -34,7 +34,7 @@ fun Telalogin(
     viewModel: LoginViewModel = viewModel(),
     onNavigateToCadastro: () -> Unit,
     onNavigateToEsqueciSenha: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: (String) -> Unit
 
 ){
     val uiState by viewModel.uiState.collectAsState()
@@ -71,7 +71,7 @@ fun Telalogin(
             )
             }
             Button(
-                onClick = {onNavigateToHome()},
+                onClick = {onNavigateToHome(uiState.email)},
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             ) {
                 Text("Login")

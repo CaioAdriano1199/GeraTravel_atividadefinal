@@ -67,7 +67,7 @@ fun MyApp() {
                             Telalogin(
                                 onNavigateToCadastro = { backStack.add(Route.Cadastro) },
                                 onNavigateToEsqueciSenha = { backStack.add(Route.LembrarSenha) },
-                                onNavigateToHome = { backStack.add(Route.Home) }
+                                onNavigateToHome = { backStack.add(Route.Home(it)) }
                             )
                         }
                         is Route.Cadastro -> NavEntry(route) {
@@ -82,7 +82,7 @@ fun MyApp() {
 
                         }
                         is Route.Home -> NavEntry(route) {
-                            TelaHome()
+                            TelaHome(email = route.email)
                         }
                     }
                 }
