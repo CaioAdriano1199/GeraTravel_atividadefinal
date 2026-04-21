@@ -1,5 +1,6 @@
 package telas
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,15 @@ import viewmodel.CadastroViewModel
 fun Telacadastro(viewModel: CadastroViewModel = viewModel(),
                  onNavigateToLogin: () -> Unit){
     val uiState by viewModel.uiState.collectAsState()
+    val cadastroSucesso by viewModel.cadastroSucesso.collectAsState()
+    val context = LocalContext.current
+    LaunchedEffect(cadastroSucesso) {
+        if (cadastroSucesso) {
+            Toast.makeText(context, "Cadastro realizado com sucesso!", Toast.LENGTH_SHORT).show()
+            onNavigateToLogin()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,7 +106,7 @@ fun Telacadastro(viewModel: CadastroViewModel = viewModel(),
             )
 
             Button(
-                onClick = {onNavigateToLogin()},
+                onClick = {viewModel.cadastrar()},
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
