@@ -13,6 +13,10 @@ class CadastroViewModel(application: Application) : AndroidViewModel(application
 
     private val repo = UsuarioRepository(application)
 
+    private val _confirmaSenha = MutableStateFlow("")
+    val confirmaSenha = _confirmaSenha.asStateFlow()
+
+
     private val _cadastroSucesso = MutableStateFlow(false)
     val cadastroSucesso = _cadastroSucesso.asStateFlow()
 
@@ -28,7 +32,7 @@ class CadastroViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateConfirmaSenha(confirmaSenha: String) {
-        _state.value = _state.value.copy(confirmaSenha = confirmaSenha)
+        _confirmaSenha.value = confirmaSenha
     }
 
     fun updateNome(nome: String) {
@@ -41,8 +45,14 @@ class CadastroViewModel(application: Application) : AndroidViewModel(application
 
     fun cadastrar() {
         val usuario = _state.value
+        val confirmacao = _confirmaSenha.value
+
 
         if (usuario.email.isBlank() || usuario.senha.isBlank()) {
+            return
+        }
+
+        if (usuario.senha != confirmacao) {
             return
         }
 

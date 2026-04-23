@@ -35,6 +35,7 @@ fun Telacadastro(viewModel: CadastroViewModel = viewModel(),
                  onNavigateToLogin: () -> Unit){
     val uiState by viewModel.uiState.collectAsState()
     val cadastroSucesso by viewModel.cadastroSucesso.collectAsState()
+    val confirmaSenha by viewModel.confirmaSenha.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(cadastroSucesso) {
         if (cadastroSucesso) {
@@ -56,6 +57,7 @@ fun Telacadastro(viewModel: CadastroViewModel = viewModel(),
             )
         }
     ) {paddingValues ->
+
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -100,7 +102,7 @@ fun Telacadastro(viewModel: CadastroViewModel = viewModel(),
             )
 
             CampoSenha(
-                senha = uiState.confirmaSenha,
+                senha = confirmaSenha,
                 onSenhaChange = { viewModel.updateConfirmaSenha(it) },
                 label = "Confirmar Senha"
             )
