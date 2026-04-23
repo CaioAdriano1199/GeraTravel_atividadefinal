@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import model.Usuario
+import model.cadastro
 
-@Database(entities = [Usuario::class], version = 2) // Aumentei a versão para 2
+@Database(entities = [cadastro::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
