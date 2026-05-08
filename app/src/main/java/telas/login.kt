@@ -71,7 +71,14 @@ fun Telalogin(
             )
             }
             Button(
-                onClick = {onNavigateToHome(uiState.email)},
+                onClick = { viewModel.realizarLogin(
+                    onLoginSuccess = { email ->
+                        onNavigateToHome(email)
+                    },
+                    onErroLogin = {
+
+                    }
+                ) },
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             ) {
                 Text("Login")
