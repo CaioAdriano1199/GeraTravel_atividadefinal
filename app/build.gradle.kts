@@ -44,6 +44,7 @@ android {
 dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.protolite.well.known.types)
     val room_version = "2.8.4"
 
     implementation("androidx.room:room-runtime:$room_version")

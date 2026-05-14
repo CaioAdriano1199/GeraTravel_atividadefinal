@@ -1,3 +1,5 @@
+package model
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -77,7 +79,7 @@ fun TelaNovaViagem(userId: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             val dataTexto = datePickerStateInicio.selectedDateMillis?.let {
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(com.google.type.Date(it))
+                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault).format(com.google.type.Date(it))
             } ?: "Data de Início 📅"
             Text(dataTexto)
         }
