@@ -12,21 +12,22 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.senac.geratravel_atividadefinal.ui.theme.GeraTravel_atividadefinalTheme
 import model.Route
+import repository.UsuarioRepository
 import telas.Telacadastro
 import telas.TelaLembraSenha
 import telas.Telalogin
 import telas.TelaHome
+import viewmodel.LoginViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +50,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MyApp() {
     val backStack = remember { mutableStateListOf<Route>(Route.Login) }
+    val context = LocalContext.current
+    val usuarioRepository = remember { UsuarioRepository(context) }
 
     BackHandler(enabled = backStack.size > 1) {
         backStack.removeLastOrNull()
@@ -64,7 +67,11 @@ fun MyApp() {
                 entryProvider = { route ->
                     when (route) {
                         is Route.Login -> NavEntry(route) {
+                            val loginViewModel: LoginViewModel = viewModel(
+                                factory = LoginViewModel.provideFactory(usuarioRepository)
+                            )
                             Telalogin(
+                                viewModel = loginViewModel,
                                 onNavigateToCadastro = { backStack.add(Route.Cadastro) },
                                 onNavigateToEsqueciSenha = { backStack.add(Route.LembrarSenha) },
                                 onNavigateToHome = { backStack.add(Route.Home(it)) }
@@ -90,5 +97,3 @@ fun MyApp() {
         }
     }
 }
-
-
