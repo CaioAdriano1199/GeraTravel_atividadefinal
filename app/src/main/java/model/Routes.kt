@@ -8,6 +8,8 @@ sealed interface Route : NavKey {
     @Serializable data object Login : Route
     @Serializable data object Cadastro : Route
     @Serializable data object LembrarSenha : Route
-
     @Serializable data class Home(val email: String) : Route
+    @Serializable data class NovaViagem(val userId: String) : Route
+    @Serializable data class MinhasViagens(val userId: String) : Route
+    @Serializable data class EditarViagem(val viagem: Viagem) : Route
 }

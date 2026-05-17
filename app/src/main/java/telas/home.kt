@@ -18,7 +18,12 @@ import viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaHome(email: String, homeViewModel: HomeViewModel = viewModel()) {
+fun TelaHome(
+    email: String, 
+    onNavigateToNovaViagem: () -> Unit,
+    onNavigateToMinhasViagens: () -> Unit,
+    homeViewModel: HomeViewModel = viewModel()
+) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -49,10 +54,10 @@ fun TelaHome(email: String, homeViewModel: HomeViewModel = viewModel()) {
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Default.AirplaneTicket, null) },
                     label = { Text("Nova viagem") },
-                    selected = telaAtiva == Rotas.NovaViagem.rota,
+                    selected = false,
                     onClick = {
-                        homeViewModel.mudarTela(Rotas.NovaViagem.rota)
                         scope.launch { drawerState.close() }
+                        onNavigateToNovaViagem()
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
@@ -60,10 +65,10 @@ fun TelaHome(email: String, homeViewModel: HomeViewModel = viewModel()) {
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Default.CardTravel, null) },
                     label = { Text("Minhas Viagens") },
-                    selected = telaAtiva == Rotas.MinhasViagens.rota,
+                    selected = false,
                     onClick = {
-                        homeViewModel.mudarTela(Rotas.MinhasViagens.rota)
                         scope.launch { drawerState.close() }
+                        onNavigateToMinhasViagens()
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
@@ -106,9 +111,9 @@ fun TelaHome(email: String, homeViewModel: HomeViewModel = viewModel()) {
                 contentAlignment = Alignment.Center
             ) {
                 when (telaAtiva) {
-                    Rotas.NovaViagem.rota -> Text("Tela: Nova Viagem ✈️")
-                    Rotas.MinhasViagens.rota -> Text("Bem-vindo, $email!\nSuas Viagens 🧳")
+                    Rotas.MinhasViagens.rota -> Text("Bem-vindo, $email!\nClique no menu para gerenciar suas viagens 🧳")
                     Rotas.Sobre.rota -> Text("Gera Travel - Versão 1.0 ℹ️")
+                    else -> Text("Bem-vindo, $email!")
                 }
             }
         }

@@ -30,9 +30,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
-import kotlin.text.format
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +47,9 @@ fun TelaNovaViagem(userId: String) {
     val datePickerStateFim = rememberDatePickerState()
     var showDatePickerInicio by remember { mutableStateOf(false) }
     var showDatePickerFim by remember { mutableStateOf(false) }
+
+    // Formatador de data definido corretamente
+    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
     Column(
         modifier = Modifier
@@ -64,7 +68,7 @@ fun TelaNovaViagem(userId: String) {
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Campo Tipo (Dropdown ou RadioButtons)
+        // Campo Tipo
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(selected = tipo == "Lazer", onClick = { tipo = "Lazer" })
             Text("Lazer 🏖️")
@@ -79,7 +83,7 @@ fun TelaNovaViagem(userId: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             val dataTexto = datePickerStateInicio.selectedDateMillis?.let {
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault).format(com.google.type.Date(it))
+                dateFormatter.format(Date(it))
             } ?: "Data de Início 📅"
             Text(dataTexto)
         }
@@ -90,7 +94,7 @@ fun TelaNovaViagem(userId: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             val dataTexto = datePickerStateFim.selectedDateMillis?.let {
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(com.google.type.Date(it))
+                dateFormatter.format(Date(it))
             } ?: "Data de Término 📅"
             Text(dataTexto)
         }
@@ -104,15 +108,13 @@ fun TelaNovaViagem(userId: String) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        // Botão Salvar com Validação
+        // Botão Salvar
         Button(
             onClick = {
-                if (destino.isBlank() || orcamento.isBlank() ||
-                    datePickerStateInicio.selectedDateMillis == null ||
-                    datePickerStateFim.selectedDateMillis == null) {
-                    // Exibir erro (Toast ou Snackbar)
-                } else {
-                    // Logica para salvar no Room via ViewModel
+                if (destino.isNotBlank() && orcamento.isNotBlank() &&
+                    datePickerStateInicio.selectedDateMillis != null &&
+                    datePickerStateFim.selectedDateMillis != null) {
+                    // Lógica para salvar
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -121,7 +123,7 @@ fun TelaNovaViagem(userId: String) {
         }
     }
 
-    // Componentes de DatePicker (Modais)
+    // Modais de DatePicker
     if (showDatePickerInicio) {
         DatePickerDialog(
             onDismissRequest = { showDatePickerInicio = false },
@@ -143,9 +145,4 @@ fun TelaNovaViagem(userId: String) {
             DatePicker(state = datePickerStateFim)
         }
     }
-}
-
-@Composable
-fun SimpleDateFormat(x0: String, x1: getDefault) {
-    TODO("Not yet implemented")
 }

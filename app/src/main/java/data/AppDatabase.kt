@@ -5,11 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import model.cadastro
+import model.Viagem
 
-@Database(entities = [cadastro::class], version = 4)
+@Database(entities = [cadastro::class, Viagem::class], version = 6)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
+    abstract fun viagemDao(): ViagemDao
 
     companion object {
         @Volatile

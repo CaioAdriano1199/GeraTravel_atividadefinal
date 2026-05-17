@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,9 +13,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,6 +30,8 @@ import telas.Telacadastro
 import telas.TelaLembraSenha
 import telas.Telalogin
 import telas.TelaHome
+import telas.TelaNovaViagem
+import telas.TelaMinhasViagens
 import viewmodel.LoginViewModel
 
 class MainActivity : ComponentActivity() {
@@ -57,9 +62,7 @@ fun MyApp() {
         backStack.removeLastOrNull()
     }
 
-    Scaffold(
-
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             NavDisplay(
                 backStack = backStack,
@@ -86,10 +89,33 @@ fun MyApp() {
                             TelaLembraSenha(
                                 onNavigateTohome = { backStack.removeLastOrNull() }
                             )
-
                         }
                         is Route.Home -> NavEntry(route) {
-                            TelaHome(email = route.email)
+                            TelaHome(
+                                email = route.email,
+                                onNavigateToNovaViagem = { backStack.add(Route.NovaViagem(route.email)) },
+                                onNavigateToMinhasViagens = { backStack.add(Route.MinhasViagens(route.email)) }
+                            )
+                        }
+                        is Route.NovaViagem -> NavEntry(route) {
+                            TelaNovaViagem(
+                                userId = route.userId,
+                                onNavigateBack = { backStack.removeLastOrNull() }
+                            )
+                        }
+                        is Route.MinhasViagens -> NavEntry(route) {
+                            TelaMinhasViagens(
+                                userId = route.userId,
+                                onNavigateBack = { backStack.removeLastOrNull() },
+                                onNavigateToEditar = { viagem -> 
+                                    backStack.add(Route.EditarViagem(viagem)) 
+                                }
+                            )
+                        }
+                        is Route.EditarViagem -> NavEntry(route) {
+                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Tela de Edição em breve para a viagem: ${route.viagem.destino}")
+                             }
                         }
                     }
                 }
