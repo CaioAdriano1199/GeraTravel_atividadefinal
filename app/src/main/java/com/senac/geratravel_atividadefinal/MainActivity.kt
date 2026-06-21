@@ -26,6 +26,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.senac.geratravel_atividadefinal.ui.theme.GeraTravel_atividadefinalTheme
 import model.Route
 import repository.UsuarioRepository
+import telas.TelaEditarViagem
 import telas.Telacadastro
 import telas.TelaLembraSenha
 import telas.Telalogin
@@ -113,9 +114,12 @@ fun MyApp() {
                             )
                         }
                         is Route.EditarViagem -> NavEntry(route) {
-                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Tela de Edição em breve para a viagem: ${route.viagem.destino}")
-                             }
+                            TelaEditarViagem(
+                                viagem = route.viagem,
+                                onNavigateBack = {
+                                    backStack.removeLastOrNull()
+                                }
+                            )
                         }
                     }
                 }
