@@ -12,4 +12,5 @@ sealed interface Route : NavKey {
     @Serializable data class NovaViagem(val userId: String) : Route
     @Serializable data class MinhasViagens(val userId: String) : Route
     @Serializable data class EditarViagem(val viagem: Viagem) : Route
+    @Serializable data class Fotos(val viagemId: Int) : Route
 }

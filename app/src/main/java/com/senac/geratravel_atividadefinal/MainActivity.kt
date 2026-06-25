@@ -26,13 +26,14 @@ import androidx.navigation3.ui.NavDisplay
 import com.senac.geratravel_atividadefinal.ui.theme.GeraTravel_atividadefinalTheme
 import model.Route
 import repository.UsuarioRepository
-import telas.TelaEditarViagem
 import telas.Telacadastro
 import telas.TelaLembraSenha
 import telas.Telalogin
 import telas.TelaHome
 import telas.TelaNovaViagem
 import telas.TelaMinhasViagens
+import telas.TelaEditarViagem
+import telas.TelaFotos
 import viewmodel.LoginViewModel
 
 class MainActivity : ComponentActivity() {
@@ -95,7 +96,8 @@ fun MyApp() {
                             TelaHome(
                                 email = route.email,
                                 onNavigateToNovaViagem = { backStack.add(Route.NovaViagem(route.email)) },
-                                onNavigateToMinhasViagens = { backStack.add(Route.MinhasViagens(route.email)) }
+                                onNavigateToMinhasViagens = { backStack.add(Route.MinhasViagens(route.email)) },
+                                onNavigateToFotos = { viagemId -> backStack.add(Route.Fotos(viagemId)) }
                             )
                         }
                         is Route.NovaViagem -> NavEntry(route) {
@@ -116,9 +118,13 @@ fun MyApp() {
                         is Route.EditarViagem -> NavEntry(route) {
                             TelaEditarViagem(
                                 viagem = route.viagem,
-                                onNavigateBack = {
-                                    backStack.removeLastOrNull()
-                                }
+                                onNavigateBack = { backStack.removeLastOrNull() }
+                            )
+                        }
+                        is Route.Fotos -> NavEntry(route) {
+                            TelaFotos(
+                                viagemId = route.viagemId,
+                                onNavigateBack = { backStack.removeLastOrNull() }
                             )
                         }
                     }

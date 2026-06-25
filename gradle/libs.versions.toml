@@ -20,6 +20,8 @@ ui = "1.11.1"
 foundation = "1.11.1"
 protoliteWellKnownTypes = "18.0.1"
 playServicesLocation = "21.3.0"
+mapsCompose = "6.1.2"
+coil = "2.7.0"
 
 
 [libraries]
@@ -52,6 +54,8 @@ androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 protolite-well-known-types = { group = "com.google.firebase", name = "protolite-well-known-types", version.ref = "protoliteWellKnownTypes" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 
 [plugins]

@@ -3,12 +3,14 @@ package telas
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import model.Viagem
 import viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
@@ -32,6 +39,7 @@ fun TelaHome(
     email: String,
     onNavigateToNovaViagem: () -> Unit,
     onNavigateToMinhasViagens: () -> Unit,
+    onNavigateToFotos: (Int) -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -42,12 +50,10 @@ fun TelaHome(
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // Função para disparar a busca de localização
     val dispararBuscaLocalizacao = {
         obterLocalizacao(fusedLocationClient, email, homeViewModel)
     }
 
-    // Launcher para pedir permissão se não tiver
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -58,7 +64,6 @@ fun TelaHome(
         }
     }
 
-    // Tenta obter localização ao iniciar a tela
     LaunchedEffect(Unit) {
         val hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarseLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -113,6 +118,24 @@ fun TelaHome(
                         }
                     }
                 )
+            },
+            bottomBar = {
+                if (uiState.viagemAtual != null) {
+                    NavigationBar {
+                        NavigationBarItem(
+                            icon = { Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null) },
+                            label = { Text("Roteiro") },
+                            selected = false,
+                            onClick = { /* Roteiro em outra tarefa */ }
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.PhotoLibrary, contentDescription = null) },
+                            label = { Text("Fotos") },
+                            selected = false,
+                            onClick = { onNavigateToFotos(uiState.viagemAtual!!.id) }
+                        )
+                    }
+                }
             }
         ) { paddingValues ->
             Column(
@@ -133,12 +156,19 @@ fun TelaHome(
                     uiState.cidadeAtual?.let {
                         Text("Você está em: ", style = MaterialTheme.typography.bodySmall)
                         Text(it, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    } ?: Text("Não foi possível detectar sua cidade.")
+                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     uiState.viagemAtual?.let { viagem ->
                         CardViagemAtual(viagem, sdf)
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Box(modifier = Modifier.fillMaxWidth().height(250.dp)) {
+                            MapaViagem(destino = viagem.destino)
+                        }
+                        
                     } ?: run {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -154,6 +184,49 @@ fun TelaHome(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MapaViagem(destino: String) {
+    val context = LocalContext.current
+    var localizacao by remember { mutableStateOf<LatLng?>(null) }
+    
+    LaunchedEffect(destino) {
+        withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context)
+                val addresses = geocoder.getFromLocationName(destino, 1)
+                if (addresses?.isNotEmpty() == true) {
+                    localizacao = LatLng(addresses[0].latitude, addresses[0].longitude)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    localizacao?.let { pos ->
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(pos, 10f)
+        }
+        
+        // Sincroniza a câmera quando a localização muda
+        LaunchedEffect(pos) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 10f)
+        }
+
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState
+        ) {
+            Marker(
+                state = rememberMarkerState(position = pos),
+                title = destino
+            )
+        }
+    } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Carregando mapa...")
     }
 }
 

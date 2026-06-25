@@ -74,4 +74,6 @@ dependencies {
     implementation(libs.androidx.material3.adaptive.navigation3)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.play.services.location)
+    implementation(libs.maps.compose)
+    implementation(libs.coil.compose)
 }

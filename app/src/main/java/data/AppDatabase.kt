@@ -6,12 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import model.cadastro
 import model.Viagem
+import model.Foto
 
-@Database(entities = [cadastro::class, Viagem::class], version = 6)
+@Database(entities = [cadastro::class, Viagem::class, Foto::class], version = 7)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
     abstract fun viagemDao(): ViagemDao
+    abstract fun fotoDao(): FotoDao
 
     companion object {
         @Volatile
