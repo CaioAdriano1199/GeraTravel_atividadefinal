@@ -2,6 +2,7 @@ package viewmodel
 
 import android.app.Application
 import android.location.Geocoder
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import data.AppDatabase
@@ -34,24 +35,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val viagemDao = AppDatabase.getDatabase(application).viagemDao()
 
-    // Flow derivado para manter compatibilidade com observadores da tela atual
-    val telaAtual: StateFlow<String> = _uiState
-        .map { it.telaAtiva }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Rotas.MinhasViagens.rota
-        )
-
-    fun mudarTela(novaTela: String) {
-        _uiState.update { it.copy(telaAtiva = novaTela) }
-    }
-
-    fun setPermissaoNegada(negada: Boolean) {
-        _uiState.update { it.copy(permissaoNegada = negada) }
-    }
-
     fun buscarViagemPorLocalizacao(latitude: Double, longitude: Double, userId: String) {
+        Log.d("HomeViewModel", "Buscando viagem para Lat: $latitude, Lon: $longitude, User: $userId")
         _uiState.update { it.copy(carregandoLocalizacao = true) }
         
         viewModelScope.launch {
@@ -59,9 +44,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 obterCidade(latitude, longitude)
             }
 
+            Log.d("HomeViewModel", "Cidade identificada: $cidade")
+
             if (cidade != null) {
                 val dataAtual = System.currentTimeMillis()
                 val viagem = viagemDao.getViagemAtual(userId, cidade, dataAtual)
+                Log.d("HomeViewModel", "Viagem encontrada: ${viagem?.destino}")
                 _uiState.update { 
                     it.copy(
                         cidadeAtual = cidade,
@@ -70,6 +58,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
             } else {
+                Log.e("HomeViewModel", "Não foi possível identificar a cidade via Geocoder")
                 _uiState.update { it.copy(carregandoLocalizacao = false) }
             }
         }
@@ -79,8 +68,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         return try {
             val geocoder = Geocoder(getApplication(), Locale.getDefault())
             val enderecos = geocoder.getFromLocation(lat, lon, 1)
-            enderecos?.firstOrNull()?.locality ?: enderecos?.firstOrNull()?.subAdminArea
+            val endereco = enderecos?.firstOrNull()
+            // Tenta vários campos para garantir que a cidade apareça
+            val cidade = endereco?.locality 
+                ?: endereco?.subAdminArea 
+                ?: endereco?.adminArea 
+                ?: endereco?.featureName
+            cidade
         } catch (e: Exception) {
+            Log.e("HomeViewModel", "Erro no Geocoder", e)
             null
         }
     }
