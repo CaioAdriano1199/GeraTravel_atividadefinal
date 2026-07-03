@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -24,11 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,26 +55,55 @@ fun TelaHome(
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val dispararBuscaLocalizacao = {
-        obterLocalizacaoAtual(fusedLocationClient, email, homeViewModel)
+    // Verifica permissão continuamente para disparar o GPS
+    var locationPermissionGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
     }
 
+    // Callback que recebe as novas coordenadas do GPS
+    val locationCallback = remember {
+        object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult.lastLocation?.let { location ->
+                    Log.d("GPS_Coordenadas", "Lat: ${location.latitude}, Lon: ${location.longitude}")
+                    homeViewModel.buscarViagemPorLocalizacao(location.latitude, location.longitude, email)
+                }
+            }
+        }
+    }
+
+    // Gerenciador de Permissão
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val granted = permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                      permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
-        if (granted) dispararBuscaLocalizacao()
+        locationPermissionGranted = permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                                    permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
     }
 
-    LaunchedEffect(Unit) {
-        val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (hasPermission) {
-            dispararBuscaLocalizacao()
+    // Inicia/Para o GPS conforme a permissão ou ciclo de vida
+    LaunchedEffect(locationPermissionGranted) {
+        if (locationPermissionGranted) {
+            val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 15000)
+                .setMinUpdateIntervalMillis(5000)
+                .build()
+            try {
+                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+            } catch (e: SecurityException) {
+                Log.e("TelaHome", "Erro de segurança ao pedir GPS", e)
+            }
         } else {
             locationPermissionLauncher.launch(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             )
+        }
+    }
+
+    // Garante que o GPS pare quando sair da tela
+    DisposableEffect(Unit) {
+        onDispose {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }
 
@@ -115,6 +143,19 @@ fun TelaHome(
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = null)
                         }
+                    },
+                    actions = {
+                        // Botão manual de atualização como segurança
+                        IconButton(onClick = { 
+                            try {
+                                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                                    .addOnSuccessListener { loc -> 
+                                        loc?.let { homeViewModel.buscarViagemPorLocalizacao(it.latitude, it.longitude, email) }
+                                    }
+                            } catch (e: Exception) { Log.e("Home", "Erro refresh", e) }
+                        }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Atualizar")
+                        }
                     }
                 )
             },
@@ -148,10 +189,9 @@ fun TelaHome(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Olá, $email!", style = MaterialTheme.typography.titleMedium)
-                
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (uiState.carregandoLocalizacao) {
+                if (uiState.carregandoLocalizacao && uiState.cidadeAtual == null) {
                     CircularProgressIndicator()
                     Text("Buscando sua localização...", modifier = Modifier.padding(8.dp))
                 } else {
@@ -176,26 +216,10 @@ fun TelaHome(
                             Text("Nenhuma viagem ativa para este local hoje. 📭", modifier = Modifier.padding(16.dp))
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Dica: Adicione uma viagem para começar!", style = MaterialTheme.typography.bodySmall)
+                        Text("Dica: Se você mudou de cidade, use o botão de atualizar! 🔄", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
-        }
-    }
-}
-
-@SuppressLint("MissingPermission")
-private fun obterLocalizacaoAtual(client: com.google.android.gms.location.FusedLocationProviderClient, userId: String, viewModel: HomeViewModel) {
-    client.lastLocation.addOnSuccessListener { location ->
-        if (location != null) {
-            viewModel.buscarViagemPorLocalizacao(location.latitude, location.longitude, userId)
-        } else {
-            client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
-                .addOnSuccessListener { freshLocation ->
-                    if (freshLocation != null) {
-                        viewModel.buscarViagemPorLocalizacao(freshLocation.latitude, freshLocation.longitude, userId)
-                    }
-                }
         }
     }
 }
@@ -217,7 +241,7 @@ fun MapaViagem(destino: String) {
     }
 
     localizacao?.let { pos ->
-        val cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(pos, 10f) }
+        val cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(pos, 12f) }
         GoogleMap(modifier = Modifier.fillMaxSize(), cameraPositionState = cameraPositionState) {
             Marker(state = rememberMarkerState(position = pos), title = destino)
         }
@@ -244,16 +268,8 @@ fun CardViagemAtual(viagem: Viagem, sdf: SimpleDateFormat) {
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Text("🗓️ Período: ${sdf.format(Date(viagem.dataInicio))} - ${sdf.format(Date(viagem.dataFim))}")
-            Text("🏷️ Tipo: ${viagem.tipo}")
-            
-            // EXIBIÇÃO DO ORÇAMENTO
             Text("💰 Orçamento: R$ ${String.format(locale, "%.2f", viagem.orcamento)}")
-            
-            Text(
-                text = "📉 Total de Gastos: R$ ${String.format(locale, "%.2f", viagem.totalGastos)}", 
-                fontWeight = FontWeight.Bold, 
-                color = MaterialTheme.colorScheme.primary
-            )
+            Text("📉 Gastos: R$ ${String.format(locale, "%.2f", viagem.totalGastos)}", fontWeight = FontWeight.Bold)
         }
     }
 }

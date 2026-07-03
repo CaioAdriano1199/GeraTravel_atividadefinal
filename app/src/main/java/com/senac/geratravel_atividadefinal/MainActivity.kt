@@ -25,7 +25,7 @@ import repository.UsuarioRepository
 import telas.*
 import viewmodel.LoginViewModel
 
-// Importação das chaves do arquivo .env via BuildConfig
+// Importação essencial para ler o arquivo .env via BuildConfig
 import com.senac.geratravel_atividadefinal.BuildConfig
 
 class MainActivity : ComponentActivity() {
@@ -48,13 +48,13 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyApp() {
-    // Gerenciamento de estado de navegação imutável para maior estabilidade
+    // Gerenciamento de estado de navegação imutável para garantir recomposição total do NavDisplay
     var backStack by remember { mutableStateOf(listOf<Route>(Route.Login)) }
     
     val context = LocalContext.current
     val usuarioRepository = remember { UsuarioRepository(context) }
     
-    // A chave GEMINI_API_KEY deve estar no seu arquivo .env e começar com AIza
+    // IA configurada com a chave do .env
     val geminiRepository = remember { 
         GeminiRepository(apiKey = BuildConfig.GEMINI_API_KEY) 
     }
@@ -84,6 +84,7 @@ fun MyApp() {
                                 backStack = backStack + Route.LembrarSenha 
                             },
                             onNavigateToHome = { email -> 
+                                // Limpa a pilha e vai para a Home
                                 backStack = listOf(Route.Home(email)) 
                             }
                         )
@@ -102,9 +103,11 @@ fun MyApp() {
                         TelaHome(
                             email = route.email,
                             onNavigateToNovaViagem = { 
+                                Log.d("Navigation", "Indo para Nova Viagem")
                                 backStack = backStack + Route.NovaViagem(route.email) 
                             },
                             onNavigateToMinhasViagens = { 
+                                Log.d("Navigation", "Indo para Minhas Viagens")
                                 backStack = backStack + Route.MinhasViagens(route.email) 
                             },
                             onNavigateToFotos = { id -> 
