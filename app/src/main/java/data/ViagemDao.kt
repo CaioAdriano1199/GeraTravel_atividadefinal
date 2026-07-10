@@ -28,9 +28,9 @@ interface ViagemDao {
     @Query("""
         SELECT * FROM viagens 
         WHERE userId = :userId 
-        AND (LOWER(destino) LIKE '%' || LOWER(:cidade) || '%' OR LOWER(:cidade) LIKE '%' || LOWER(destino) || '%')
+        AND (LOWER(destino) LIKE '%' || LOWER(:cidade))
         AND :dataAtual >= dataInicio 
-        AND :dataAtual <= (dataFim + 86399999)
+        AND :dataAtual <= (dataFim)
         LIMIT 1
     """)
     suspend fun getViagemAtual(userId: String, cidade: String, dataAtual: Long): Viagem?
